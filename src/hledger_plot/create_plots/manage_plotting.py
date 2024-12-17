@@ -1,6 +1,6 @@
 import os
 from argparse import Namespace
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
 import pandas as pd
 from pandas.core.frame import DataFrame
@@ -11,7 +11,6 @@ from typeguard import typechecked
 from hledger_plot import HledgerCategories
 from hledger_plot.create_plots.create_sankey_plot import (
     pysankey_plot_with_manual_pos,
-    sankey_plot,
     to_sankey_df,
 )
 from hledger_plot.create_plots.create_treemap_plot import combined_treemap_plot
@@ -56,14 +55,13 @@ def manage_plotting(
         disp_currency=args.display_currency,
     )
 
-    (
+    [
         net_worth_treemap,
+        income_vs_expenses_treemap,
         expenses_treemap,
-        all_balances_sankey,
         all_balances_sankey_man_pos,
-        income_expenses_sankey,
         income_expenses_sankey_man_pos,
-    ) = create_plot_objects(
+    ] = create_plot_objects(
         all_balances_df=all_balances_df,
         top_level_account_categories=top_level_account_categories,
         hledgerCategories=hledgerCategories,
@@ -73,19 +71,19 @@ def manage_plotting(
 
     export_plots(
         args=args,
+        # income_vs_expenses_treemap=income_vs_expenses_treemap, TODO: support.
         expenses_treemap=expenses_treemap,
-        all_balances_sankey=all_balances_sankey,
-        income_expenses_sankey=income_expenses_sankey,
+        all_balances_sankey=all_balances_sankey_man_pos,
+        income_expenses_sankey=income_expenses_sankey_man_pos,
         net_worth_treemap=net_worth_treemap,
     )
     show_plots(
         args=args,
         some_figs=[
             net_worth_treemap,
+            income_vs_expenses_treemap,
             expenses_treemap,
-            all_balances_sankey,
             all_balances_sankey_man_pos,
-            income_expenses_sankey,
             income_expenses_sankey_man_pos,
         ],
     )
@@ -99,7 +97,7 @@ def create_plot_objects(
     hledgerCategories: HledgerCategories,
     income_expenses_df: DataFrame,
     net_worth_df: DataFrame,
-) -> Tuple[Figure, Figure, Figure, Figure, Figure, Figure]:
+) -> List[Figure]:
 
     net_worth_sankey: pd.DataFrame = to_sankey_df(
         df=all_balances_df,
@@ -117,10 +115,6 @@ def create_plot_objects(
             "How your assets cover your liabilities, with manual positioning."
         ),
     )
-    all_balances_sankey: Figure = sankey_plot(
-        net_worth_sankey,
-        title="How your assets cover your liabilities, with auto positioning.",
-    )
 
     # Create the income vs expense Sankey plot.
 
@@ -136,12 +130,17 @@ def create_plot_objects(
         sankey_df=income_vs_expenses_sankey_df,
         title="How your income covers your expenses, with manual positioning.",
     )
-    income_expenses_sankey: Figure = sankey_plot(
-        income_vs_expenses_sankey_df,
-        title="How your income covers your expenses, with auto positioning.",
-    )
 
     # Generate the Treemap plot for the expenses.
+    income_vs_expenses_treemap: Figure = combined_treemap_plot(
+        income_expenses_df,
+        [
+            hledgerCategories.income_categories,
+            hledgerCategories.expense_categories,
+        ],
+        title="Visual overview of your:",
+    )
+
     expenses_treemap: Figure = combined_treemap_plot(
         income_expenses_df,
         [hledgerCategories.expense_categories],
@@ -156,14 +155,13 @@ def create_plot_objects(
         ],
         title="Visual overview of your:",
     )
-    return (
+    return [
         net_worth_treemap,
+        income_vs_expenses_treemap,
         expenses_treemap,
         all_balances_sankey_man_pos,
-        all_balances_sankey,
         income_expenses_sankey_man_pos,
-        income_expenses_sankey,
-    )
+    ]
 
 
 @typechecked
