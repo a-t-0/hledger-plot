@@ -1,0 +1,115 @@
+    Assets:RealEstate:PrimaryResidence
+    Assets:RealEstate:RentalProperty
+    Assets:RealEstate:Land
+    Assets:Investments:Stocks
+    Assets:Investments:Bonds
+    Assets:Investments:MutualFunds
+    Assets:Investments:ETFs
+    Assets:Investments:Cryptocurrency:Bitcoin
+    Assets:Investments:Cryptocurrency:Ethereum
+    Assets:Investments:Cryptocurrency:Litecoin
+    Assets:Vehicles:Car
+    Assets:Vehicles:Motorcycle
+    Assets:Vehicles:Boat
+    Assets:Vehicles:RV
+    Assets:Savings:EmergencyFund
+    Assets:Savings:VacationFund
+    Assets:Savings:RetirementFund
+    Assets:Savings:ChildrensEducationFund
+    Assets:Business:Inventory
+    Assets:Business:Equipment
+    Assets:Business:AccountsReceivable
+    Assets:Other:Jewelry
+    Assets:Other:Artwork
+    Assets:Other:Collectibles
+
+Liabilities
+
+    Liabilities:Mortgage:PrimaryResidence
+    Liabilities:Mortgage:RentalProperty
+    Liabilities:AutoLoan:Car
+    Liabilities:AutoLoan:Motorcycle
+    Liabilities:StudentLoan:Federal
+    Liabilities:StudentLoan:Private
+    Liabilities:CreditCardDebt:Visa
+    Liabilities:CreditCardDebt:Mastercard
+    Liabilities:CreditCardDebt:AmericanExpress
+    Liabilities:PersonalLoan:Bank
+    Liabilities:PersonalLoan:OnlineLender
+    Liabilities:Other:MedicalDebt
+
+Equity
+
+    Equity:NetWorth
+    Equity:HomeEquity
+
+Income
+
+    Income:Salary:PrimaryJob
+    Income:Salary:SecondaryJob
+    Income:SelfEmployment:Freelance
+    Income:SelfEmployment:Business
+    Income:RentalIncome:Property1
+    Income:RentalIncome:Property2
+    Income:InvestmentIncome:Dividends
+    Income:InvestmentIncome:Interest
+    Income:InvestmentIncome:CapitalGains
+    Income:OtherIncome:Gifts
+    Income:OtherIncome:Bonuses
+    Income:OtherIncome:Refunds
+
+Expenses
+
+    Expenses:Housing:Mortgage
+    Expenses:Housing:Rent
+    Expenses:Housing:PropertyTax
+    Expenses:Housing:HomeownersInsurance
+    Expenses:Housing:Utilities:Electricity
+    Expenses:Housing:Utilities:Gas
+    Expenses:Housing:Utilities:Water
+    Expenses:Housing:Utilities:Internet
+    Expenses:Housing:Utilities:CableTV
+    Expenses:Housing:HomeMaintenance:Repairs
+    Expenses:Housing:HomeMaintenance:Improvements
+    Expenses:Transportation:CarPayment
+    Expenses:Transportation:CarInsurance
+    Expenses:Transportation:Gas
+    Expenses:Transportation:PublicTransportation
+    Expenses:Transportation:Parking
+    Expenses:Transportation:Tolls
+    Expenses:Food:Groceries
+    Expenses:Food:DiningOut
+    Expenses:Food:Coffee
+    Expenses:Healthcare:InsurancePremiums
+    Expenses:Healthcare:DoctorVisits
+    Expenses:Healthcare:Prescriptions
+    Expenses:Healthcare:Dental
+    Expenses:Healthcare:Vision
+    Expenses:PersonalCare:Haircuts
+    Expenses:PersonalCare:Cosmetics
+    Expenses:PersonalCare:GymMembership
+    Expenses:Entertainment:Movies
+    Expenses:Entertainment:StreamingServices
+    Expenses:Entertainment:Hobbies
+    Expenses:Entertainment:Travel
+    Expenses:Entertainment:Gaming
+    Expenses:Education:Tuition
+    Expenses:Education:Books
+    Expenses:Education:CourseFees
+    Expenses:Clothing:Clothes
+    Expenses:Clothing:Shoes
+    Expenses:Gifts:Birthdays
+    Expenses:Gifts:Holidays
+    Expenses:Gifts:Charity
+    Expenses:Fees:BankFees
+    Expenses:Fees:InvestmentFees
+    Expenses:Fees:ProfessionalFees
+    Expenses:Taxes:FederalIncomeTax
+    Expenses:Taxes:StateIncomeTax
+    Expenses:Taxes:PropertyTax
+    Expenses:Taxes:SalesTax
+    Expenses:Other:Subscriptions
+    Expenses:Other:PhoneBill
+    Expenses:Other:PetExpenses
+    Expenses:Other:Childcare
+    Expenses:Other:Miscellaneous

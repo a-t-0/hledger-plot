@@ -59,6 +59,7 @@ def manage_plotting(
         net_worth_treemap,
         income_vs_expenses_treemap,
         expenses_treemap,
+        income_treemap,
         all_balances_sankey_man_pos,
         income_expenses_sankey_man_pos,
     ] = create_plot_objects(
@@ -83,6 +84,7 @@ def manage_plotting(
             net_worth_treemap,
             income_vs_expenses_treemap,
             expenses_treemap,
+            income_treemap,
             all_balances_sankey_man_pos,
             income_expenses_sankey_man_pos,
         ],
@@ -112,12 +114,11 @@ def create_plot_objects(
     all_balances_sankey_man_pos: Figure = pysankey_plot_with_manual_pos(
         sankey_df=net_worth_sankey,
         title=(
-            "How your assets cover your liabilities, with manual positioning."
+            "Sankey plot - How your assets cover your liabilities:"
         ),
     )
 
     # Create the income vs expense Sankey plot.
-
     income_vs_expenses_sankey_df: pd.DataFrame = to_sankey_df(
         df=income_expenses_df,
         top_level_account_categories=top_level_account_categories,
@@ -128,7 +129,7 @@ def create_plot_objects(
     )
     income_expenses_sankey_man_pos: Figure = pysankey_plot_with_manual_pos(
         sankey_df=income_vs_expenses_sankey_df,
-        title="How your income covers your expenses, with manual positioning.",
+        title="Sankey plot - Change over time: how your income covered your expenses:",
     )
 
     # Generate the Treemap plot for the expenses.
@@ -138,13 +139,18 @@ def create_plot_objects(
             hledgerCategories.income_categories,
             hledgerCategories.expense_categories,
         ],
-        title="Visual overview of your:",
+        title="Treemap - Change over time: how your income covered your expenses:",
     )
 
     expenses_treemap: Figure = combined_treemap_plot(
         income_expenses_df,
         [hledgerCategories.expense_categories],
-        title="Visual overview of your:",
+        title="Treemap - Overview of your expenses:",
+    )
+    income_treemap: Figure = combined_treemap_plot(
+        income_expenses_df,
+        [hledgerCategories.income_categories],
+        title="Treemap - Overview of your income:",
     )
 
     net_worth_treemap: Figure = combined_treemap_plot(
@@ -153,12 +159,13 @@ def create_plot_objects(
             hledgerCategories.liability_categories,
             hledgerCategories.asset_categories,
         ],
-        title="Visual overview of your:",
+        title="Treemap - Your financial state/position:",
     )
     return [
         net_worth_treemap,
         income_vs_expenses_treemap,
         expenses_treemap,
+        income_treemap,
         all_balances_sankey_man_pos,
         income_expenses_sankey_man_pos,
     ]
