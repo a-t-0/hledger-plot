@@ -88,3 +88,5 @@ dependencies:
     # Load journal in beancount.
     - beancount-parser
     - pysankeyBeta
+    # Scramble financial data for demo purposes.
+    - random-word

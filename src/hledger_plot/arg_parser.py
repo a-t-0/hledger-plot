@@ -127,6 +127,12 @@ def create_arg_parser() -> argparse.ArgumentParser:
             " etc.."
         ),
     )
+    parser.add_argument(
+        "-r",
+        "--randomize",
+        action="store_true",
+        help="Obvuscates data for demo purposes using randomization.",
+    )
 
     parser.add_argument(
         "-v",

@@ -15,7 +15,7 @@ repos:
    hooks:
      - id: vulture
        args: [
-            "--min-confidence", "60",
+            "--min-confidence", "61",
             # "--exclude", "*env*",
             ".",
       ]
@@ -78,6 +78,7 @@ repos:
    rev: v2.3.0
    hooks:
     - id: codespell
+      exclude: 'random_words.txt|random.txt'
 
 # Performs static code analysis to check for programming errors.
  - repo: local

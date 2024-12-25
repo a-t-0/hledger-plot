@@ -24,6 +24,8 @@ def manage_plotting(
     journal_filepath: str,
     top_level_account_categories: List[str],
     hledgerCategories: HledgerCategories,
+    random_words: List[str],
+    separator: str,
 ) -> None:
     merged_account_categories = " ".join(top_level_account_categories)
 
@@ -68,6 +70,9 @@ def manage_plotting(
         hledgerCategories=hledgerCategories,
         income_expenses_df=income_vs_expenses_df,
         net_worth_df=net_worth_df,
+        scramble=args.randomize,
+        random_words=random_words,
+        separator=separator,
     )
 
     export_plots(
@@ -99,6 +104,9 @@ def create_plot_objects(
     hledgerCategories: HledgerCategories,
     income_expenses_df: DataFrame,
     net_worth_df: DataFrame,
+    scramble: bool,
+    random_words: List[str],
+    separator: str,
 ) -> List[Figure]:
 
     net_worth_sankey: pd.DataFrame = to_sankey_df(
@@ -108,14 +116,15 @@ def create_plot_objects(
             hledgerCategories.liability_categories
         ],
         desired_right_top_level_categories=[hledgerCategories.asset_categories],
+        scramble=scramble,
+        random_words=random_words,
+        separator=separator,
     )
 
     # Get all balances plot.
     all_balances_sankey_man_pos: Figure = pysankey_plot_with_manual_pos(
         sankey_df=net_worth_sankey,
-        title=(
-            "Sankey plot - How your assets cover your liabilities:"
-        ),
+        title="Sankey plot - How your assets cover your liabilities:",
     )
 
     # Create the income vs expense Sankey plot.
@@ -126,10 +135,16 @@ def create_plot_objects(
         desired_right_top_level_categories=[
             hledgerCategories.expense_categories
         ],
+        scramble=scramble,
+        random_words=random_words,
+        separator=separator,
     )
     income_expenses_sankey_man_pos: Figure = pysankey_plot_with_manual_pos(
         sankey_df=income_vs_expenses_sankey_df,
-        title="Sankey plot - Change over time: how your income covered your expenses:",
+        title=(
+            "Sankey plot - Change over time: how your income covered your"
+            " expenses:"
+        ),
     )
 
     # Generate the Treemap plot for the expenses.
@@ -139,7 +154,9 @@ def create_plot_objects(
             hledgerCategories.income_categories,
             hledgerCategories.expense_categories,
         ],
-        title="Treemap - Change over time: how your income covered your expenses:",
+        title=(
+            "Treemap - Change over time: how your income covered your expenses:"
+        ),
     )
 
     expenses_treemap: Figure = combined_treemap_plot(

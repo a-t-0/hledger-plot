@@ -8,6 +8,8 @@ from pandas.core.frame import DataFrame
 from plotly.graph_objs._figure import Figure
 from typeguard import typechecked
 
+from hledger_plot.create_plots.scrambler import scramble_sankey_data
+
 
 class ColumnNode:
     def __init__(self, index: int, name: str, value: float):
@@ -36,6 +38,9 @@ def to_sankey_df(
     top_level_account_categories: List[str],
     desired_left_top_level_categories: List[str],
     desired_right_top_level_categories: List[str],
+    scramble: bool,
+    random_words: List[str],
+    separator: str,
 ) -> pd.DataFrame:
 
     # TODO: assert full_transaction category does not contain duplicate values
@@ -59,10 +64,10 @@ def to_sankey_df(
 
         # Top-level accounts need to be connected to the special bucket that
         # divides input from output. The name for this bucket is randomly
-        # chosen to be: BALANCE-LINE.
+        # chosen to be: separator.
 
         if full_transaction_category in top_level_account_categories:
-            parent_acc = "BALANCE-LINE"
+            parent_acc = separator
         else:
             parent_acc = parent(transaction_category=full_transaction_category)
             if parent_acc not in accounts:
@@ -128,44 +133,19 @@ def to_sankey_df(
 
     sankey_df.to_csv("sankey.csv", index=False)
 
-    return sankey_df
-
-
-@typechecked
-def sankey_plot(sankey_df: pd.DataFrame, title: str) -> Figure:
-    # Sort DataFrame by either 'source' or 'target' column, to make sure that
-    # related accounts stay close together in the initial layout.
-    sankey_df.sort_values(by=["target", "source"], inplace=True)
-
-    # Get unique sources and targets for node names
-    nodes = pd.concat([sankey_df["source"], sankey_df["target"]]).unique()
-    sources = sankey_df["source"].map(lambda x: nodes.tolist().index(x))
-
-    target = sankey_df["target"].map(lambda x: nodes.tolist().index(x))
-    values = sankey_df["value"]
-
-    # Create Sankey diagram
-    fig = go.Figure(
-        data=[
-            go.Sankey(
-                node=dict(
-                    pad=25,
-                    thickness=20,
-                    line=dict(color="black", width=0.5),
-                    label=nodes,
-                    color="blue",
-                ),
-                link=dict(
-                    source=sources,
-                    target=target,
-                    value=values,
-                ),
-            )
-        ],
-        layout={"title": title, "meta": "sankey"},
+    # TODO: load larger wordlist
+    scrambled_df = scramble_sankey_data(
+        sankey_df=sankey_df,
+        random_words=random_words,
+        top_level_categories=top_level_account_categories,
+        separator=separator,
     )
 
-    return fig
+    if scramble:
+        print("\n\\scrambled_df")
+        input(scrambled_df)
+        return scrambled_df
+    return sankey_df
 
 
 @typechecked
