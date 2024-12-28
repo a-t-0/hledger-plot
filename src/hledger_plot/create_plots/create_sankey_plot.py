@@ -183,7 +183,7 @@ def to_sankey_df(
 
     sankey_df.to_csv("sankey.csv", index=False)
 
-    scrambled_df,_ = scramble_sankey_data(
+    scrambled_df, _ = scramble_sankey_data(
         sankey_df=sankey_df,
         random_words=random_words,
         top_level_categories=top_level_account_categories,

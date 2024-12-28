@@ -6,7 +6,6 @@ from pandas.core.frame import DataFrame
 from plotly.graph_objs._figure import Figure
 from typeguard import typechecked
 
-from hledger_plot.create_plots.create_sankey_plot import get_parent
 from hledger_plot.create_plots.scrambler import scramble_sankey_data
 from hledger_plot.HledgerCategories import get_parent
 
@@ -65,13 +64,15 @@ def combined_treemap_plot(
     return fig
 
 
+@typechecked
 def get_max_level_to_min_level(
     ordered_children: Dict[int, List[str]],
 ) -> List[int]:
     return sorted(ordered_children.keys())
 
 
-def set_parent_to_child_sum(*, df: DataFrame):
+@typechecked
+def set_parent_to_child_sum(*, df: DataFrame) -> None:
     ordered_entries: Dict[int, List[str]] = get_level_dict(df=df)
     # input(f"ordered_entries={ordered_entries}")
     levels: List[int] = get_max_level_to_min_level(
@@ -113,6 +114,7 @@ def add_to_value_of_category(
         raise ValueError(f"Did not find entry_name:{entry_name}")
 
 
+@typechecked
 def get_values_of_children(*, df: DataFrame, child_name: str) -> float:
     some = df.loc[df[0] == child_name, 1]
     if len(some) != 1:
@@ -121,6 +123,7 @@ def get_values_of_children(*, df: DataFrame, child_name: str) -> float:
     return some_float
 
 
+@typechecked
 def get_parent_level_dict(df: DataFrame) -> Dict[int, List[str]]:
     children: Dict[int, List[str]] = {}
     for parent in df["parent"]:
