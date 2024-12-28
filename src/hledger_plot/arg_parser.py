@@ -136,10 +136,10 @@ def create_arg_parser() -> argparse.ArgumentParser:
 
     parser.add_argument(
         "-v",
-        "--verbosity",
-        type=str,
+        "--verbose",
+        action="store_true",
         required=False,
-        help="How talkative you want this program to be.",
+        help="Print intermediate information.",
     )
 
     return parser
