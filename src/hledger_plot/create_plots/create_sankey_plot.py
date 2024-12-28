@@ -1,5 +1,6 @@
-from typing import Dict, List, Tuple
 from argparse import Namespace
+from typing import Dict, List, Tuple
+
 import pandas as pd
 import plotly.graph_objects as go
 from pandas.core.frame import DataFrame
@@ -33,7 +34,11 @@ def parent(transaction_category: str) -> str:
 
 @typechecked
 def store_down_transactions(
-    *, args:Namespace,balance: float, full_transaction_category: str, parent_account: str
+    *,
+    args: Namespace,
+    balance: float,
+    full_transaction_category: str,
+    parent_account: str,
 ) -> Tuple[str, str]:
     if balance >= 0:
         if args.verbose:
@@ -47,10 +52,10 @@ def store_down_transactions(
     else:
         if args.verbose:
             print(
-            f"DOWN: {balance} -"
-            " S=full_transaction_category="
-            f"{full_transaction_category},T=parent_account="
-            f"{parent_account}"
+                f"DOWN: {balance} -"
+                " S=full_transaction_category="
+                f"{full_transaction_category},T=parent_account="
+                f"{parent_account}"
             )
         source, target = full_transaction_category, parent_account
     return source, target
@@ -58,24 +63,28 @@ def store_down_transactions(
 
 @typechecked
 def store_up_transactions(
-    *, args:Namespace,balance: float, full_transaction_category: str, parent_account: str
+    *,
+    args: Namespace,
+    balance: float,
+    full_transaction_category: str,
+    parent_account: str,
 ) -> Tuple[str, str]:
     if balance < 0:
         source, target = full_transaction_category, parent_account
         if args.verbose:
             print(
-            f"UP: {balance} -"
-            " S=full_transaction_category="
-            f"{full_transaction_category},T=parent_account={parent_account}"
-        )
+                f"UP: {balance} -"
+                " S=full_transaction_category="
+                f"{full_transaction_category},T=parent_account={parent_account}"
+            )
     else:
         source, target = parent_account, full_transaction_category
         if args.verbose:
             print(
-            f"UP: {balance} -"
-            f" S=parent_account={parent_account},T="
-            f"full_transaction_category={full_transaction_category}"
-        )
+                f"UP: {balance} -"
+                f" S=parent_account={parent_account},T="
+                f"full_transaction_category={full_transaction_category}"
+            )
     return source, target
 
 
@@ -110,7 +119,7 @@ def get_parent_account(
 @typechecked
 def to_sankey_df(
     *,
-    args:Namespace,
+    args: Namespace,
     df: DataFrame,
     top_level_account_categories: List[str],
     desired_left_top_level_categories: List[str],
@@ -118,7 +127,6 @@ def to_sankey_df(
     random_words: List[str],
     separator: str,
 ) -> pd.DataFrame:
-
 
     # TODO: assert full_transaction category does not contain duplicate values
     # like: assets:windows:assets:moon

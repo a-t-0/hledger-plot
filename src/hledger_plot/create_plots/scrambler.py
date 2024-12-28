@@ -51,7 +51,6 @@ def scramble_sankey_data(
         random_words=random_words,
         original_list=sorted(list(unique_atomic_categories)),
     )
-    
 
     # Randomize the dataframe column by column..
     sankey_df["source"] = scramble_df_column(

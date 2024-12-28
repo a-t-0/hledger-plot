@@ -99,13 +99,12 @@ def manage_plotting(
 @typechecked
 def create_plot_objects(
     *,
-    args:Namespace,
+    args: Namespace,
     all_balances_df: DataFrame,
     top_level_account_categories: List[str],
     hledgerCategories: HledgerCategories,
     income_expenses_df: DataFrame,
     net_worth_df: DataFrame,
-    
     random_words: List[str],
     separator: str,
 ) -> List[Figure]:

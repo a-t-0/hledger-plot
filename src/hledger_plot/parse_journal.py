@@ -1,21 +1,21 @@
 import subprocess  # nosec
+from argparse import Namespace
 from io import StringIO
 from typing import List
 
 import pandas as pd
 from pandas.core.frame import DataFrame
 from typeguard import typechecked
-from argparse import Namespace
+
 
 @typechecked
 def read_balance_report(
-    args:Namespace,
+    args: Namespace,
     filename: str,
     account_categories: str,
     top_level_account_categories: List[str],
-    
 ) -> DataFrame:
-    disp_currency: str= args.display_currency
+    disp_currency: str = args.display_currency
     optional_balance_args = [
         # not:desc:opening: Excludes entries with descriptions containing the
         # word 'opening'.
