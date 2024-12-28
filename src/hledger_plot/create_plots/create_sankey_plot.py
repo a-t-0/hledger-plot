@@ -10,6 +10,7 @@ from plotly.graph_objs._figure import Figure
 from typeguard import typechecked
 
 from hledger_plot.create_plots.scrambler import scramble_sankey_data
+from hledger_plot.HledgerCategories import get_parent
 
 
 class ColumnNode:
@@ -25,11 +26,6 @@ class Position:
         self.name = name
         self.x = x
         self.y = y
-
-
-@typechecked
-def parent(transaction_category: str) -> str:
-    return ":".join(transaction_category.split(":")[:-1])
 
 
 @typechecked
@@ -107,7 +103,9 @@ def get_parent_account(
     if full_transaction_category in top_level_account_categories:
         parent_account = separator
     else:
-        parent_account = parent(transaction_category=full_transaction_category)
+        parent_account = get_parent(
+            transaction_category=full_transaction_category
+        )
         if parent_account not in accounts:
             raise Exception(
                 f"for account {full_transaction_category}, parent account"
@@ -190,11 +188,11 @@ def to_sankey_df(
         random_words=random_words,
         top_level_categories=top_level_account_categories,
         separator=separator,
+        text_column_headers=["source", "target"],
+        numeric_column_headers=["value"],
     )
 
     if args.randomize:
-        print("\n\\scrambled_df")
-        input(scrambled_df)
         return scrambled_df
     return sankey_df
 

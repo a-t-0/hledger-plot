@@ -1,6 +1,8 @@
 from argparse import Namespace
 from typing import Optional, Type
 
+from typeguard import typechecked
+
 
 class HledgerCategories:
     """A class to manage and parse Hledger financial categories.
@@ -88,3 +90,8 @@ class HledgerCategories:
         if categories is None:
             return default
         return " ".join(categories.split(","))
+
+
+@typechecked
+def get_parent(transaction_category: str) -> str:
+    return ":".join(transaction_category.split(":")[:-1])

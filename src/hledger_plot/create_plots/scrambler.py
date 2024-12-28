@@ -1,6 +1,6 @@
 import os
 import random
-from typing import Dict, List
+from typing import Dict, List, Union
 
 import pandas as pd
 from pandas.core.series import Series
@@ -34,14 +34,17 @@ def scramble_sankey_data(
     random_words: List[str],
     top_level_categories: List[str],
     separator: str,
+    text_column_headers: List[Union[str, int]],
+    numeric_column_headers: List[Union[str, int]],
 ) -> pd.DataFrame:
-    unique_atomic_categories = get_unique_atomic_categories(
-        some_df_list=list(sankey_df["source"])
-    )
-    unique_atomic_categories = (
-        unique_atomic_categories
-        | get_unique_atomic_categories(some_df_list=list(sankey_df["target"]))
-    )
+    unique_atomic_categories = set()
+
+    for text_column_header in text_column_headers:
+        unique_atomic_categories.update(
+            get_unique_atomic_categories(
+                some_df_list=list(sankey_df[text_column_header])
+            )
+        )
     top_level_categories_copy = top_level_categories.copy() + [separator]
     for skipped_entry in top_level_categories_copy:
         if skipped_entry in unique_atomic_categories:
@@ -53,15 +56,16 @@ def scramble_sankey_data(
     )
 
     # Randomize the dataframe column by column..
-    sankey_df["source"] = scramble_df_column(
-        scrambler_map=scrambler_map, some_col=sankey_df["source"]
-    )
-    sankey_df["target"] = scramble_df_column(
-        scrambler_map=scrambler_map, some_col=sankey_df["target"]
-    )
-    sankey_df["value"] = randomize_list_order_magnitude(
-        numbers=list(sankey_df["value"])
-    )
+    for text_column_header in text_column_headers:
+        sankey_df[text_column_header] = scramble_df_column(
+            scrambler_map=scrambler_map, some_col=sankey_df[text_column_header]
+        )
+    for numeric_column_header in numeric_column_headers:
+        sankey_df[numeric_column_header] = randomize_list_order_magnitude(
+            numbers=list(sankey_df[numeric_column_header]),
+            lower=0.12,
+            upper=10.2,
+        )
     return sankey_df
 
 
@@ -76,7 +80,8 @@ def scramble_df_column(
             if atomic_category in scrambler_map.keys():
                 atomic_categories[j] = scrambler_map[atomic_category]
 
-        some_col[i] = ":".join(atomic_categories)
+        some_col[i + 1] = ":".join(atomic_categories)
+
     return some_col
 
 
@@ -122,8 +127,71 @@ def map_original_to_randomized(
     return shuffle_dict
 
 
+def determine_magnitude_sequence(lst):
+    """Determines the relative magnitude sequence of a list of numbers.
+
+    Args:
+      lst: A list of numbers.
+
+    Returns:
+      A list of integers representing the relative magnitudes of the numbers
+      in the input list.
+    """
+
+    # Normalize the list to have a maximum value of 1.
+    max_val = max(abs(x) for x in lst)
+    normalized_lst = [x / max_val for x in lst]
+
+    # Determine the rank of each element.
+    ranked_lst = sorted(
+        range(len(normalized_lst)), key=lambda k: normalized_lst[k]
+    )
+
+    # Assign a relative magnitude to each element based on its rank.
+    magnitude_sequence = [i for i, _ in enumerate(ranked_lst)]
+
+    return magnitude_sequence
+
+
+def randomize_list_order_magnitude1(numbers: List[float]) -> List[float]:
+    """Generates a list of numbers with the specified relative magnitude
+    sequence.
+
+    Args:
+      desired_sequence: A list of integers representing the desired order of
+                        magnitudes (e.g., [4, 1, 2, 0, 3]).
+      some_min: The minimum value for the generated numbers.
+      some_max: The maximum value for the generated numbers.
+
+    Returns:
+      A list of numbers with the specified relative magnitude sequence.
+    """
+    desired_sequence: List[int] = determine_magnitude_sequence(lst=numbers)
+    # Normalize the desired_sequence to a range between 0 and 1.
+    max_seq = max(desired_sequence)
+    normalized_seq = [float(x) / max_seq for x in desired_sequence]
+
+    # Generate random numbers within the normalized range.
+    random_values = [
+        random.random() * normalized_seq[i]
+        for i in range(len(desired_sequence))
+    ]
+
+    # Scale the random numbers to the desired range.
+    scaled_values = [
+        (max(numbers) - min(numbers)) * x + min(numbers) for x in random_values
+    ]
+
+    # Introduce random sign (positive or negative) for each number.
+    #   numbers = [random.choice([-1, 1]) * x for x in scaled_values]
+
+    return scaled_values
+
+
 @typechecked
-def randomize_list_order_magnitude(numbers: List[float]) -> List[float]:
+def randomize_list_order_magnitude(
+    numbers: List[float], lower: float, upper: float
+) -> List[float]:
     """Randomizes a list of numbers while preserving the order and maintaining
     roughly the same magnitude.
 
@@ -132,14 +200,16 @@ def randomize_list_order_magnitude(numbers: List[float]) -> List[float]:
 
     Returns:
         A new list with the numbers randomized while preserving order
-        and roughly maintaining magnitude.
+        and roughly maintaining majgnitude.
     """
 
     # mean = sum(numbers) / len(numbers)
-    multipliers = [
-        random.uniform(0.11, 10.1) for _ in range(len(numbers))  # nosec
-    ]
-    return [
+    multipliers = sorted(
+        [random.uniform(lower, upper) for _ in range(len(numbers))]  # nosec
+    )
+
+    output_nrs: List[float] = [
         round(num * multiplier, 2)
         for num, multiplier in zip(numbers, multipliers)
     ]
+    return output_nrs

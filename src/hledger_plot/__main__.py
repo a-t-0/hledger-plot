@@ -26,6 +26,7 @@ def main() -> None:
         args=args
     )
     random_wordlist_filename: str = "random_categories.txt"
+    # random_wordlist_filename: str = "random.txt"
 
     random_words = load_words_from_file(filename=random_wordlist_filename)
 

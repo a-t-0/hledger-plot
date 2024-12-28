@@ -108,6 +108,7 @@ def create_plot_objects(
     random_words: List[str],
     separator: str,
 ) -> List[Figure]:
+
     net_worth_sankey: pd.DataFrame = to_sankey_df(
         args=args,
         df=all_balances_df,
@@ -148,34 +149,46 @@ def create_plot_objects(
 
     # Generate the Treemap plot for the expenses.
     income_vs_expenses_treemap: Figure = combined_treemap_plot(
-        income_expenses_df,
-        [
+        args=args,
+        balances_df=income_expenses_df,
+        account_categories=[
             hledgerCategories.income_categories,
             hledgerCategories.expense_categories,
         ],
         title=(
             "Treemap - Change over time: how your income covered your expenses:"
         ),
+        random_words=random_words,
+        separator=separator,
     )
 
     expenses_treemap: Figure = combined_treemap_plot(
-        income_expenses_df,
-        [hledgerCategories.expense_categories],
+        args=args,
+        balances_df=income_expenses_df,
+        account_categories=[hledgerCategories.expense_categories],
         title="Treemap - Overview of your expenses:",
+        random_words=random_words,
+        separator=separator,
     )
     income_treemap: Figure = combined_treemap_plot(
-        income_expenses_df,
-        [hledgerCategories.income_categories],
+        args=args,
+        balances_df=income_expenses_df,
+        account_categories=[hledgerCategories.income_categories],
         title="Treemap - Overview of your income:",
+        random_words=random_words,
+        separator=separator,
     )
 
     net_worth_treemap: Figure = combined_treemap_plot(
-        net_worth_df,
-        [
+        args=args,
+        balances_df=net_worth_df,
+        account_categories=[
             hledgerCategories.liability_categories,
             hledgerCategories.asset_categories,
         ],
         title="Treemap - Your financial state/position:",
+        random_words=random_words,
+        separator=separator,
     )
     return [
         net_worth_treemap,
