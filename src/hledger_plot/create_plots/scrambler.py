@@ -24,7 +24,7 @@ def load_words_from_file(*, filename: str) -> List[str]:
         raise FileNotFoundError(f"Did not find: {filename}")
     with open(filename) as f:
         words = f.read().splitlines()
-    return list(set(words))
+    return sorted(list(set(words)))
 
 
 @typechecked
@@ -36,11 +36,11 @@ def scramble_sankey_data(
     separator: str,
 ) -> pd.DataFrame:
     unique_atomic_categories = get_unique_atomic_categories(
-        some_df_list=sankey_df["source"]
+        some_df_list=list(sankey_df["source"])
     )
     unique_atomic_categories = (
         unique_atomic_categories
-        | get_unique_atomic_categories(some_df_list=sankey_df["target"])
+        | get_unique_atomic_categories(some_df_list=list(sankey_df["target"]))
     )
     top_level_categories_copy = top_level_categories.copy() + [separator]
     for skipped_entry in top_level_categories_copy:
@@ -48,8 +48,10 @@ def scramble_sankey_data(
             unique_atomic_categories.remove(skipped_entry)
 
     scrambler_map: Dict[str, str] = map_original_to_randomized(
-        random_words=random_words, original_list=list(unique_atomic_categories)
+        random_words=random_words,
+        original_list=sorted(list(unique_atomic_categories)),
     )
+    input(f"scrambler_map={scrambler_map}")
 
     # Randomize the dataframe column by column..
     sankey_df["source"] = scramble_df_column(
@@ -133,7 +135,6 @@ def randomize_list_order_magnitude(numbers: List[float]) -> List[float]:
         A new list with the numbers randomized while preserving order
         and roughly maintaining magnitude.
     """
-    import random
 
     # mean = sum(numbers) / len(numbers)
     multipliers = [
