@@ -1,7 +1,7 @@
 import os
 import random
 from pprint import pprint
-from typing import Dict, List, Union
+from typing import Dict, List, Tuple, Union
 
 import pandas as pd
 from pandas.core.series import Series
@@ -37,7 +37,7 @@ def scramble_sankey_data(
     separator: str,
     text_column_headers: List[Union[str, int]],
     numeric_column_headers: List[Union[str, int]],
-) -> pd.DataFrame:
+) -> Tuple[pd.DataFrame, Dict[str,str]]:
     unique_atomic_categories = set()
 
     for text_column_header in text_column_headers:
@@ -55,7 +55,6 @@ def scramble_sankey_data(
         random_words=random_words,
         original_list=sorted(list(unique_atomic_categories)),
     )
-    pprint(scrambler_map)
     if len(set(scrambler_map.keys())) != len(scrambler_map.keys()):
         raise ValueError("Found dupes in randomization.")
     if len(set(scrambler_map.values())) != len(scrambler_map.values()):
@@ -72,7 +71,7 @@ def scramble_sankey_data(
             lower=0.12,
             upper=10.2,
         )
-    return sankey_df
+    return sankey_df, scrambler_map
 
 
 @typechecked
@@ -119,22 +118,49 @@ def map_original_to_randomized(
     randomly selected words from random_words.
     """
     shuffle_dict: Dict[str, str] = {}
-    used_words = set()
     if len(random_words) < len(original_list):
         raise ValueError(
             f"Please provide more random words than:{len(original_list)}"
         )
 
-    for category, random_words in shuffle_dict.items():
-        while True:
-            random_index = int(random.uniform(0, len(random_words)))  # nosec
-            selected_word = random_words[random_index]
-            if selected_word not in used_words:
-                shuffle_dict[category] = selected_word
-                used_words.add(selected_word)
-                break
+    for category in original_list:
 
+        shuffle_dict[category]=get_unique_random_word(random_words, shuffle_dict)
+
+    if len(shuffle_dict.keys()) != len(original_list):
+        raise ValueError("Did not create a mapping for each element in the original list.")
     return shuffle_dict
+
+
+def get_unique_random_word(random_words, shuffle_dict):
+  """
+  Selects a random word from the given list that is not already present as a value in the given dictionary.
+
+  Args:
+    random_words: A list of words.
+    shuffle_dict: A dictionary.
+
+  Returns:
+    The randomly selected word.
+
+  Raises:
+    ValueError: If all words in the list have already been used as values in the dictionary.
+  """
+
+  attempts = 0
+  max_attempts = len(random_words)  # Limit attempts to the number of words
+
+  while True:
+    if attempts >= max_attempts:
+      raise ValueError("All words have already been used.")
+
+    random_index = int(random.uniform(0, len(random_words)))  # nosec
+    random_word = random_words[random_index]
+
+    if random_word not in shuffle_dict.values():
+      return random_word
+
+    attempts += 1
 
 
 def determine_magnitude_sequence(lst):

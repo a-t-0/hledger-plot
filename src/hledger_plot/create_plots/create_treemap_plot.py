@@ -34,7 +34,7 @@ def combined_treemap_plot(
     filtered_df.loc[:, "parent"] = filtered_df["name"].apply(get_parent)
 
     if args.randomize:
-        scrambled_df = scramble_sankey_data(
+        scramble_sankey_data(
             sankey_df=filtered_df,
             random_words=random_words,
             top_level_categories=account_categories,
@@ -42,18 +42,15 @@ def combined_treemap_plot(
             text_column_headers=[0],
             numeric_column_headers=[1],
         )
-        print("scrambled_df")
-        input(scrambled_df)
-        filtered_df = scrambled_df
+        # filtered_df = scrambled_df
 
         if len(set(filtered_df[0])) != len(filtered_df[0]):
             raise ValueError("Found dupes after randomization.")
 
         set_parent_to_child_sum(df=filtered_df)
-
+        filtered_df.loc[:, "name"] = filtered_df[0]
         filtered_df.loc[:, "value"] = abs(filtered_df[1].astype(int))
-        print(f"\n\nAFTER hierarchy restore filtered_df=")
-        input(filtered_df)
+        filtered_df.loc[:, "parent"] = filtered_df["name"].apply(get_parent)
 
     # Create the treemap
     fig = px.treemap(
@@ -111,12 +108,7 @@ def add_to_value_of_category(
     """
 
     try:
-        old = df.loc[df[0] == entry_name, 1].iloc[0]
         df.loc[df[0] == entry_name, 1] += amount
-        print(
-            f"entry_name={entry_name} old={old},"
-            f" new={df.loc[df[0] == entry_name, 1].iloc[0]} amount={amount}"
-        )
     except KeyError:
         raise ValueError(f"Did not find entry_name:{entry_name}")
 
