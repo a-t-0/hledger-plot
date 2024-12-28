@@ -1,13 +1,12 @@
 from argparse import Namespace
 from typing import Dict, List
-
+from hledger_plot.HledgerCategories import get_parent
 import plotly.express as px
 from pandas.core.frame import DataFrame
 from plotly.graph_objs._figure import Figure
 
 from hledger_plot.create_plots.create_sankey_plot import get_parent
 from hledger_plot.create_plots.scrambler import scramble_sankey_data
-from hledger_plot.HledgerCategories import get_parent
 
 
 def combined_treemap_plot(
@@ -48,7 +47,7 @@ def combined_treemap_plot(
     # print(f'filtered_df=')
     # print(filtered_df)
     # restore_magnitudes(filtered_df=filtered_df)
-
+    
     print(f"\n\nAFTER SWAP filtered_df=")
     input(filtered_df)
     set_parent_to_child_sum(df=filtered_df)
@@ -80,29 +79,41 @@ def set_parent_to_child_sum(*, df: DataFrame):
     )
     for level in reversed(levels):
         for ordered_entry in ordered_entries[level]:
-            input(
-                f"{level} ordered_entry={ordered_entry},"
-                f" parent={get_parent(ordered_entry)}"
-            )
-            if level > 0:
+            input(f'{level} ordered_entry={ordered_entry}, parent={get_parent(ordered_entry)}')
+            if level>0:
 
                 # get parent, make its value its current value plus this value.
-                add_to_value_of_category(
-                    df=df,
-                    entry_name=get_parent(ordered_entry),
-                    amount=get_values_of_children(
-                        df=df, child_name=ordered_entry
-                    ),
-                )
+                add_to_value_of_category(df=df, 
+                                         entry_name=get_parent(ordered_entry),
+                                         amount=get_values_of_children(df=df, child_name=ordered_entry))
 
+            
+def add_to_value_of_category1(*, df: DataFrame, entry_name: str, amount) -> None:
 
-def add_to_value_of_category(*, df: DataFrame, entry_name: str, amount) -> None:
     for row_index, name in enumerate(df[0]):
         if name == entry_name:
             df[1][row_index] += amount
             return
     raise ValueError(f"Did not find entry_name:{entry_name}")
 
+def add_to_value_of_category(*, df: DataFrame, entry_name: str, amount) -> None:
+    """
+    Adds the specified amount to the value of the given entry in the DataFrame.
+
+    Args:
+        df: The DataFrame containing the data.
+        entry_name: The name of the entry to modify.
+        amount: The amount to add to the entry's value.
+
+    Raises:
+        ValueError: If the entry_name is not found in the DataFrame.
+    """
+
+    try:
+        # Use .loc for direct assignment
+        df.loc[df[0] == entry_name, 1] += amount 
+    except KeyError:
+        raise ValueError(f"Did not find entry_name:{entry_name}")    
 
 def get_values_of_children(*, df: DataFrame, child_name: str) -> float:
     for row_index, name in enumerate(df[0]):
