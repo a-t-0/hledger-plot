@@ -1,12 +1,14 @@
 from argparse import Namespace
 from typing import Dict, List
-from hledger_plot.HledgerCategories import get_parent
+
 import plotly.express as px
 from pandas.core.frame import DataFrame
 from plotly.graph_objs._figure import Figure
+from typeguard import typechecked
 
 from hledger_plot.create_plots.create_sankey_plot import get_parent
 from hledger_plot.create_plots.scrambler import scramble_sankey_data
+from hledger_plot.HledgerCategories import get_parent
 
 
 def combined_treemap_plot(
@@ -23,8 +25,13 @@ def combined_treemap_plot(
         balances_df[0].str.contains("|".join(account_categories))
     ].copy()  # Make a copy to avoid modifying the original DataFrame
 
-    print("BEFORE filtered_df")
-    print(filtered_df)
+    if len(set(filtered_df[0])) != len(filtered_df[0]):
+        raise ValueError("Found dupes.")
+
+    # Prepare the DataFrame
+    filtered_df.loc[:, "name"] = filtered_df[0]
+    filtered_df.loc[:, "value"] = abs(filtered_df[1].astype(int))
+    filtered_df.loc[:, "parent"] = filtered_df["name"].apply(get_parent)
 
     if args.randomize:
         scrambled_df = scramble_sankey_data(
@@ -35,22 +42,18 @@ def combined_treemap_plot(
             text_column_headers=[0],
             numeric_column_headers=[1],
         )
-        # input("scrambled_df")
-        # input(scrambled_df)
+        print("scrambled_df")
+        input(scrambled_df)
         filtered_df = scrambled_df
 
-    # Prepare the DataFrame
-    filtered_df.loc[:, "name"] = filtered_df[0]
-    filtered_df.loc[:, "value"] = abs(filtered_df[1].astype(int))
-    filtered_df.loc[:, "parent"] = filtered_df["name"].apply(get_parent)
+        if len(set(filtered_df[0])) != len(filtered_df[0]):
+            raise ValueError("Found dupes after randomization.")
 
-    # print(f'filtered_df=')
-    # print(filtered_df)
-    # restore_magnitudes(filtered_df=filtered_df)
-    
-    print(f"\n\nAFTER SWAP filtered_df=")
-    input(filtered_df)
-    set_parent_to_child_sum(df=filtered_df)
+        set_parent_to_child_sum(df=filtered_df)
+
+        filtered_df.loc[:, "value"] = abs(filtered_df[1].astype(int))
+        print(f"\n\nAFTER hierarchy restore filtered_df=")
+        input(filtered_df)
 
     # Create the treemap
     fig = px.treemap(
@@ -72,33 +75,31 @@ def get_max_level_to_min_level(
 
 
 def set_parent_to_child_sum(*, df: DataFrame):
-    ordered_entries: Dict[int, List[str]] = get_parent_level_dict(df=df)
+    ordered_entries: Dict[int, List[str]] = get_level_dict(df=df)
     # input(f"ordered_entries={ordered_entries}")
     levels: List[int] = get_max_level_to_min_level(
         ordered_children=ordered_entries
     )
     for level in reversed(levels):
         for ordered_entry in ordered_entries[level]:
-            input(f'{level} ordered_entry={ordered_entry}, parent={get_parent(ordered_entry)}')
-            if level>0:
+            if level > 0:
 
                 # get parent, make its value its current value plus this value.
-                add_to_value_of_category(df=df, 
-                                         entry_name=get_parent(ordered_entry),
-                                         amount=get_values_of_children(df=df, child_name=ordered_entry))
+                add_to_value_of_category(
+                    df=df,
+                    entry_name=get_parent(ordered_entry),
+                    amount=get_values_of_children(
+                        df=df, child_name=ordered_entry
+                    ),
+                )
 
-            
-def add_to_value_of_category1(*, df: DataFrame, entry_name: str, amount) -> None:
 
-    for row_index, name in enumerate(df[0]):
-        if name == entry_name:
-            df[1][row_index] += amount
-            return
-    raise ValueError(f"Did not find entry_name:{entry_name}")
-
-def add_to_value_of_category(*, df: DataFrame, entry_name: str, amount) -> None:
-    """
-    Adds the specified amount to the value of the given entry in the DataFrame.
+@typechecked
+def add_to_value_of_category(
+    *, df: DataFrame, entry_name: str, amount: float
+) -> None:
+    """Adds the specified amount to the value of the given entry in the
+    DataFrame.
 
     Args:
         df: The DataFrame containing the data.
@@ -110,16 +111,22 @@ def add_to_value_of_category(*, df: DataFrame, entry_name: str, amount) -> None:
     """
 
     try:
-        # Use .loc for direct assignment
-        df.loc[df[0] == entry_name, 1] += amount 
+        old = df.loc[df[0] == entry_name, 1].iloc[0]
+        df.loc[df[0] == entry_name, 1] += amount
+        print(
+            f"entry_name={entry_name} old={old},"
+            f" new={df.loc[df[0] == entry_name, 1].iloc[0]} amount={amount}"
+        )
     except KeyError:
-        raise ValueError(f"Did not find entry_name:{entry_name}")    
+        raise ValueError(f"Did not find entry_name:{entry_name}")
+
 
 def get_values_of_children(*, df: DataFrame, child_name: str) -> float:
-    for row_index, name in enumerate(df[0]):
-        if name == child_name:
-            return df[1][row_index]
-    raise ValueError(f"Did not find child:{child_name}")
+    some = df.loc[df[0] == child_name, 1]
+    if len(some) != 1:
+        raise ValueError("returning something other than a single number.")
+    some_float: float = float(some.iloc[0])
+    return some_float
 
 
 def get_parent_level_dict(df: DataFrame) -> Dict[int, List[str]]:
@@ -131,6 +138,22 @@ def get_parent_level_dict(df: DataFrame) -> Dict[int, List[str]]:
                 children[parent.count(":")].append(parent)
             else:
                 children[parent.count(":")] = [parent]
+    for key, value in children.items():
+        children[key] = list(set(value))
+    return children
+
+
+def get_level_dict(df: DataFrame) -> Dict[int, List[str]]:
+    children: Dict[int, List[str]] = {}
+    for category in df[0]:
+        if category != "":
+
+            if category.count(":") in children.keys():
+                children[category.count(":")].append(category)
+            else:
+                children[category.count(":")] = [category]
+        else:
+            raise ValueError(f"Empty categories not supported:{category}")
     for key, value in children.items():
         children[key] = list(set(value))
     return children

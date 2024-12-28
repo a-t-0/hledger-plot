@@ -1,5 +1,6 @@
 import os
 import random
+from pprint import pprint
 from typing import Dict, List, Union
 
 import pandas as pd
@@ -54,8 +55,13 @@ def scramble_sankey_data(
         random_words=random_words,
         original_list=sorted(list(unique_atomic_categories)),
     )
+    pprint(scrambler_map)
+    if len(set(scrambler_map.keys())) != len(scrambler_map.keys()):
+        raise ValueError("Found dupes in randomization.")
+    if len(set(scrambler_map.values())) != len(scrambler_map.values()):
+        raise ValueError("Found dupes in randomization values.")
 
-    # Randomize the dataframe column by column..
+    # Randomize the dataframe column by column.
     for text_column_header in text_column_headers:
         sankey_df[text_column_header] = scramble_df_column(
             scrambler_map=scrambler_map, some_col=sankey_df[text_column_header]
@@ -113,16 +119,20 @@ def map_original_to_randomized(
     randomly selected words from random_words.
     """
     shuffle_dict: Dict[str, str] = {}
+    used_words = set()
     if len(random_words) < len(original_list):
         raise ValueError(
             f"Please provide more random words than:{len(original_list)}"
         )
-    for category in original_list:
 
-        # shuffle_dict[category]=random.choice(random_words) # No seed.
-        shuffle_dict[category] = random_words[
-            int(random.uniform(0, len(random_words)))  # nosec
-        ]
+    for category, random_words in shuffle_dict.items():
+        while True:
+            random_index = int(random.uniform(0, len(random_words)))  # nosec
+            selected_word = random_words[random_index]
+            if selected_word not in used_words:
+                shuffle_dict[category] = selected_word
+                used_words.add(selected_word)
+                break
 
     return shuffle_dict
 
