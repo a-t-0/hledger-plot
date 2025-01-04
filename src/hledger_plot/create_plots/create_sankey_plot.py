@@ -344,8 +344,6 @@ def pysankey_plot_with_manual_pos(
     y_coords = [pos.y for pos in node_positions]
 
     # Create Sankey diagram
-
-    # Create Sankey diagram
     fig: Figure = go.Figure(
         data=[
             go.Sankey(

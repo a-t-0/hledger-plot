@@ -227,8 +227,10 @@ def show_plots(
 
         fig.update_layout(
             title_text="Insight in financial situation",
-            height=len(some_figs) * 900,
-        )  # n plots x 900 px
+            # TODO: Scale the 2800 len per image with the max nr. of entries in
+            # levels dict for Sankey.
+            height=len(some_figs) * 2800,
+        )
 
         fig.show()
 
