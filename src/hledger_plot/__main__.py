@@ -6,7 +6,9 @@ from typeguard import typechecked
 
 from hledger_plot.arg_parser import create_arg_parser, verify_args
 from hledger_plot.create_plots.manage_plotting import manage_plotting
-from hledger_plot.create_plots.scrambler import load_words_from_file
+from hledger_plot.create_plots.scrambler import (
+    get_rand_categories,
+)
 from hledger_plot.HledgerCategories import HledgerCategories
 from hledger_plot.journal_parsing.get_top_level_domains import (
     get_top_level_account_categories,
@@ -25,10 +27,10 @@ def main() -> None:
     hledgerCategories: HledgerCategories = HledgerCategories.from_args(
         args=args
     )
-    random_wordlist_filename: str = "random_categories.txt"
-    # random_wordlist_filename: str = "random.txt"
-
-    random_words = load_words_from_file(filename=random_wordlist_filename)
+    random_wordlist_filepath: str = "random_categories.txt"
+    random_words = get_rand_categories(
+        random_wordlist_filepath=random_wordlist_filepath
+    )
 
     if args.journal_filepath:
         top_level_account_categories: List[str] = (
@@ -49,3 +51,7 @@ def main() -> None:
             separator=separator,
         )
         exit()
+    else:
+        raise ValueError(
+            "Did not receive --journal-filepath, so won't do anything."
+        )

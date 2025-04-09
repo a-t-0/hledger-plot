@@ -6,23 +6,34 @@ import pandas as pd
 from pandas.core.series import Series
 from typeguard import typechecked
 
+from hledger_plot.random_categories import long_random_categories
+
 # vulture
 pd.options.mode.copy_on_write = True
 
 
 @typechecked
-def load_words_from_file(*, filename: str) -> List[str]:
+def get_rand_categories(*, random_wordlist_filepath: str) -> List[str]:
+
+    if os.path.exists(random_wordlist_filepath):
+        return load_words_from_file(filepath=random_wordlist_filepath)
+
+    return sorted(long_random_categories)
+
+
+@typechecked
+def load_words_from_file(*, filepath: str) -> List[str]:
     """Loads a list of words from a given file.
 
     Args:
-      filename: The path to the file containing the words.
+      filepath: The path to the file containing the words.
 
     Returns:
       A list of words read from the file.
     """
-    if not os.path.isfile(filename):
-        raise FileNotFoundError(f"Did not find: {filename}")
-    with open(filename) as f:
+    if not os.path.isfile(filepath):
+        raise FileNotFoundError(f"Did not find: {filepath}")
+    with open(filepath) as f:
         words = f.read().splitlines()
     return sorted(list(set(words)))
 
@@ -61,15 +72,23 @@ def scramble_sankey_data(
 
     # Randomize the dataframe column by column.
     for text_column_header in text_column_headers:
+        if top_level_categories[0] == "liabilities":
+            print(f"text_column_header={text_column_header}")
         sankey_df[text_column_header] = scramble_df_column(
             scrambler_map=scrambler_map, some_col=sankey_df[text_column_header]
         )
     for numeric_column_header in numeric_column_headers:
+        if top_level_categories[0] == "liabilities":
+            print(f"numeric_column_header={numeric_column_header}")
         sankey_df[numeric_column_header] = randomize_list_order_magnitude(
             numbers=list(sankey_df[numeric_column_header]),
             lower=0.12,
             upper=10.2,
         )
+    if top_level_categories[0] == "liabilities":
+        print(sankey_df)
+        input(f"scrambler_map={scrambler_map}")
+
     return sankey_df, scrambler_map
 
 
@@ -85,7 +104,6 @@ def scramble_df_column(
                 atomic_categories[j] = scrambler_map[atomic_category]
 
         some_col[i + 1] = ":".join(atomic_categories)
-
     return some_col
 
 

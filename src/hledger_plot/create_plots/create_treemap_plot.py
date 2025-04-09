@@ -23,7 +23,6 @@ def combined_treemap_plot(
     filtered_df = balances_df[
         balances_df[0].str.contains("|".join(account_categories))
     ].copy()  # Make a copy to avoid modifying the original DataFrame
-
     if len(set(filtered_df[0])) != len(filtered_df[0]):
         raise ValueError("Found dupes.")
 
@@ -33,6 +32,7 @@ def combined_treemap_plot(
     filtered_df.loc[:, "parent"] = filtered_df["name"].apply(get_parent)
 
     if args.randomize:
+        input(f"scrambling:{account_categories}")
         scramble_sankey_data(
             sankey_df=filtered_df,
             random_words=random_words,
@@ -41,7 +41,6 @@ def combined_treemap_plot(
             text_column_headers=[0],
             numeric_column_headers=[1],
         )
-        # filtered_df = scrambled_df
 
         if len(set(filtered_df[0])) != len(filtered_df[0]):
             raise ValueError("Found dupes after randomization.")
@@ -74,7 +73,6 @@ def get_max_level_to_min_level(
 @typechecked
 def set_parent_to_child_sum(*, df: DataFrame) -> None:
     ordered_entries: Dict[int, List[str]] = get_level_dict(df=df)
-    # input(f"ordered_entries={ordered_entries}")
     levels: List[int] = get_max_level_to_min_level(
         ordered_children=ordered_entries
     )

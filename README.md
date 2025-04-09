@@ -4,8 +4,8 @@
 [![License: AGPL v3][agpl3_badge]](https://www.gnu.org/licenses/agpl-3.0)
 [![Code Style: Black][black_badge]](https://github.com/ambv/black)
 
-Visualises your financial situation using hledger journals that use
-double-entry bookkeeping/accounting.
+Used by `hledger-flow`. Visualises your financial situation using hledger
+journals that use double-entry bookkeeping/accounting.
 
 ## Usage
 

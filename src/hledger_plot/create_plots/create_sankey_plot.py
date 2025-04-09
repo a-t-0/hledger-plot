@@ -180,19 +180,17 @@ def to_sankey_df(
                 "target": target,
                 "value": abs(balance),
             }
-
     sankey_df.to_csv("sankey.csv", index=False)
 
-    scrambled_df, _ = scramble_sankey_data(
-        sankey_df=sankey_df,
-        random_words=random_words,
-        top_level_categories=top_level_account_categories,
-        separator=separator,
-        text_column_headers=["source", "target"],
-        numeric_column_headers=["value"],
-    )
-
     if args.randomize:
+        scrambled_df, _ = scramble_sankey_data(
+            sankey_df=sankey_df,
+            random_words=random_words,
+            top_level_categories=top_level_account_categories,
+            separator=separator,
+            text_column_headers=["source", "target"],
+            numeric_column_headers=["value"],
+        )
         return scrambled_df
     return sankey_df
 

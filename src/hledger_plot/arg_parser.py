@@ -170,7 +170,10 @@ def verify_args(*, parser: ArgumentParser) -> Any:
             or args.account_type
             or args.start_path
         ):
-            raise ValueError("Plesase do 1 thing at a time.")
+            raise ValueError(
+                "You gave a journal filepath and account_holder/bankPlesase do"
+                " 1 thing at a time."
+            )
 
     return args
 
