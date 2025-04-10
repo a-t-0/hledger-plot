@@ -1,4 +1,5 @@
 import subprocess  # nosec
+from argparse import Namespace
 from io import StringIO
 from typing import List
 
@@ -9,11 +10,12 @@ from typeguard import typechecked
 
 @typechecked
 def read_balance_report(
+    args: Namespace,
     filename: str,
     account_categories: str,
     top_level_account_categories: List[str],
-    disp_currency: str,
 ) -> DataFrame:
+    disp_currency: str = args.display_currency
     optional_balance_args = [
         # not:desc:opening: Excludes entries with descriptions containing the
         # word 'opening'.
@@ -40,8 +42,9 @@ def read_balance_report(
     )
 
     # Call hledger to compute balances.
-    print(f"Ignoring options:{optional_balance_args}\n")
-    print(f"default_command=:{default_command}\n")
+    if args.verbose:
+        print(f"Ignoring options:{optional_balance_args}\n")
+        print(f"default_command=:{default_command}\n")
     process_output = subprocess.run(  # nosec
         default_command.split(" "),
         stdout=subprocess.PIPE,

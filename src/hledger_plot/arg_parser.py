@@ -136,10 +136,10 @@ def create_arg_parser() -> argparse.ArgumentParser:
 
     parser.add_argument(
         "-v",
-        "--verbosity",
-        type=str,
+        "--verbose",
+        action="store_true",
         required=False,
-        help="How talkative you want this program to be.",
+        help="Print intermediate information.",
     )
 
     return parser
@@ -170,7 +170,10 @@ def verify_args(*, parser: ArgumentParser) -> Any:
             or args.account_type
             or args.start_path
         ):
-            raise ValueError("Plesase do 1 thing at a time.")
+            raise ValueError(
+                "You gave a journal filepath and account_holder/bankPlesase do"
+                " 1 thing at a time."
+            )
 
     return args
 

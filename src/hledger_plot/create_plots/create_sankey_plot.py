@@ -1,4 +1,5 @@
-from typing import Dict, List
+from argparse import Namespace
+from typing import Dict, List, Tuple
 
 import pandas as pd
 import plotly.graph_objects as go
@@ -9,6 +10,7 @@ from plotly.graph_objs._figure import Figure
 from typeguard import typechecked
 
 from hledger_plot.create_plots.scrambler import scramble_sankey_data
+from hledger_plot.HledgerCategories import get_parent
 
 
 class ColumnNode:
@@ -27,18 +29,99 @@ class Position:
 
 
 @typechecked
-def parent(transaction_category: str) -> str:
-    return ":".join(transaction_category.split(":")[:-1])
+def store_down_transactions(
+    *,
+    args: Namespace,
+    balance: float,
+    full_transaction_category: str,
+    parent_account: str,
+) -> Tuple[str, str]:
+    if balance >= 0:
+        if args.verbose:
+            print(
+                f"DOWN: {balance} -"
+                f" S=parent_account={parent_account},T=f"
+                f"ull_transaction_category={full_transaction_category}"
+            )
+
+        source, target = parent_account, full_transaction_category
+    else:
+        if args.verbose:
+            print(
+                f"DOWN: {balance} -"
+                " S=full_transaction_category="
+                f"{full_transaction_category},T=parent_account="
+                f"{parent_account}"
+            )
+        source, target = full_transaction_category, parent_account
+    return source, target
+
+
+@typechecked
+def store_up_transactions(
+    *,
+    args: Namespace,
+    balance: float,
+    full_transaction_category: str,
+    parent_account: str,
+) -> Tuple[str, str]:
+    if balance < 0:
+        source, target = full_transaction_category, parent_account
+        if args.verbose:
+            print(
+                f"UP: {balance} -"
+                " S=full_transaction_category="
+                f"{full_transaction_category},T=parent_account={parent_account}"
+            )
+    else:
+        source, target = parent_account, full_transaction_category
+        if args.verbose:
+            print(
+                f"UP: {balance} -"
+                f" S=parent_account={parent_account},T="
+                f"full_transaction_category={full_transaction_category}"
+            )
+    return source, target
+
+
+@typechecked
+def get_parent_account(
+    *,
+    df: DataFrame,
+    top_level_account_categories: List[str],
+    full_transaction_category: str,
+    separator: str,
+) -> str:
+    # A set of all accounts mentioned in the report, to check that parent
+    # accounts have known balance.
+    accounts = set(df[0].values)
+
+    # Top-level accounts need to be connected to the special bucket that
+    # divides input from output. The name for this bucket is randomly
+    # chosen to be: separator.
+
+    if full_transaction_category in top_level_account_categories:
+        parent_account = separator
+    else:
+        parent_account = get_parent(
+            transaction_category=full_transaction_category
+        )
+        if parent_account not in accounts:
+            raise Exception(
+                f"for account {full_transaction_category}, parent account"
+                f" {parent_account} not found - have you forgotten --no-elide?"
+            )
+    return parent_account
 
 
 @typechecked
 def to_sankey_df(
     *,
+    args: Namespace,
     df: DataFrame,
     top_level_account_categories: List[str],
     desired_left_top_level_categories: List[str],
     desired_right_top_level_categories: List[str],
-    scramble: bool,
     random_words: List[str],
     separator: str,
 ) -> pd.DataFrame:
@@ -51,30 +134,16 @@ def to_sankey_df(
         columns=["source", "target", "value"]
     )
 
-    # A set of all accounts mentioned in the report, to check that parent
-    # accounts have known balance.
-    accounts = set(df[0].values)
-
-    parent_acc: str
-
     # Convert report to the sankey dataframe
     for _, row in df.iterrows():
-        full_transaction_category = row[0]
-        balance = row[1]
-
-        # Top-level accounts need to be connected to the special bucket that
-        # divides input from output. The name for this bucket is randomly
-        # chosen to be: separator.
-
-        if full_transaction_category in top_level_account_categories:
-            parent_acc = separator
-        else:
-            parent_acc = parent(transaction_category=full_transaction_category)
-            if parent_acc not in accounts:
-                raise Exception(
-                    f"for account {full_transaction_category}, parent account"
-                    f" {parent_acc} not found - have you forgotten --no-elide?"
-                )
+        full_transaction_category: str = row[0]
+        balance: float = row[1]
+        parent_account: str = get_parent_account(
+            df=df,
+            top_level_account_categories=top_level_account_categories,
+            full_transaction_category=full_transaction_category,
+            separator=separator,
+        )
 
         # If no desired categories are found, do not add anything to the
         # sankey_df.
@@ -87,41 +156,22 @@ def to_sankey_df(
                 top_level_category in full_transaction_category
                 for top_level_category in desired_left_top_level_categories
             ):
-                if balance < 0:
-                    source, target = full_transaction_category, parent_acc
-                    print(
-                        f"UP: {balance} -"
-                        " S=full_transaction_category="
-                        f"{full_transaction_category},T=parent_acc={parent_acc}"
-                    )
-                else:
-                    source, target = parent_acc, full_transaction_category
-                    print(
-                        f"UP: {balance} -"
-                        f" S=parent_acc={parent_acc},T="
-                        f"full_transaction_category={full_transaction_category}"
-                    )
+                source, target = store_up_transactions(
+                    args=args,
+                    balance=balance,
+                    full_transaction_category=full_transaction_category,
+                    parent_account=parent_account,
+                )
             elif any(
                 top_level_category in full_transaction_category
                 for top_level_category in desired_right_top_level_categories
             ):
-                if balance >= 0:
-                    print(
-                        f"DOWN: {balance} -"
-                        f" S=parent_acc={parent_acc},T=f"
-                        f"ull_transaction_category={full_transaction_category}"
-                    )
-
-                    source, target = parent_acc, full_transaction_category
-                else:
-                    print(
-                        f"DOWN: {balance} -"
-                        " S=full_transaction_category="
-                        f"{full_transaction_category},T=parent_acc="
-                        f"{parent_acc}"
-                    )
-                    source, target = full_transaction_category, parent_acc
-
+                source, target = store_down_transactions(
+                    args=args,
+                    balance=balance,
+                    full_transaction_category=full_transaction_category,
+                    parent_account=parent_account,
+                )
             else:
                 # Skip unwanted categories.
                 pass
@@ -130,20 +180,17 @@ def to_sankey_df(
                 "target": target,
                 "value": abs(balance),
             }
-
     sankey_df.to_csv("sankey.csv", index=False)
 
-    # TODO: load larger wordlist
-    scrambled_df = scramble_sankey_data(
-        sankey_df=sankey_df,
-        random_words=random_words,
-        top_level_categories=top_level_account_categories,
-        separator=separator,
-    )
-
-    if scramble:
-        print("\n\\scrambled_df")
-        input(scrambled_df)
+    if args.randomize:
+        scrambled_df, _ = scramble_sankey_data(
+            sankey_df=sankey_df,
+            random_words=random_words,
+            top_level_categories=top_level_account_categories,
+            separator=separator,
+            text_column_headers=["source", "target"],
+            numeric_column_headers=["value"],
+        )
         return scrambled_df
     return sankey_df
 
@@ -293,8 +340,6 @@ def pysankey_plot_with_manual_pos(
     # Extract x and y coordinates
     # [pos["x"] for pos in node_positions]
     y_coords = [pos.y for pos in node_positions]
-
-    # Create Sankey diagram
 
     # Create Sankey diagram
     fig: Figure = go.Figure(

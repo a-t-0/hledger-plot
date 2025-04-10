@@ -31,32 +31,31 @@ def manage_plotting(
 
     # Get all balances information used to create plot.
     all_balances_df: DataFrame = read_balance_report(
-        journal_filepath,
-        merged_account_categories,
-        top_level_account_categories,
-        disp_currency=args.display_currency,
+        args=args,
+        filename=journal_filepath,
+        account_categories=merged_account_categories,
+        top_level_account_categories=top_level_account_categories,
     )
 
     # Create incomve vs expense dataframe. It's used to create the Sankey plot.
     income_vs_expenses_df: DataFrame = read_balance_report(
-        journal_filepath,
-        hledgerCategories.expense_categories
+        args=args,
+        filename=journal_filepath,
+        account_categories=hledgerCategories.expense_categories
         + " "
         + hledgerCategories.income_categories,
-        top_level_account_categories,
-        disp_currency=args.display_currency,
+        top_level_account_categories=top_level_account_categories,
     )
 
     # Create incomve vs expense dataframe. It's used to create the Sankey plot.
     net_worth_df: DataFrame = read_balance_report(
-        journal_filepath,
-        hledgerCategories.liability_categories
+        args=args,
+        filename=journal_filepath,
+        account_categories=hledgerCategories.liability_categories
         + " "
         + hledgerCategories.asset_categories,
-        top_level_account_categories,
-        disp_currency=args.display_currency,
+        top_level_account_categories=top_level_account_categories,
     )
-
     [
         net_worth_treemap,
         income_vs_expenses_treemap,
@@ -65,12 +64,12 @@ def manage_plotting(
         all_balances_sankey_man_pos,
         income_expenses_sankey_man_pos,
     ] = create_plot_objects(
+        args=args,
         all_balances_df=all_balances_df,
         top_level_account_categories=top_level_account_categories,
         hledgerCategories=hledgerCategories,
         income_expenses_df=income_vs_expenses_df,
         net_worth_df=net_worth_df,
-        scramble=args.randomize,
         random_words=random_words,
         separator=separator,
     )
@@ -99,24 +98,35 @@ def manage_plotting(
 @typechecked
 def create_plot_objects(
     *,
+    args: Namespace,
     all_balances_df: DataFrame,
     top_level_account_categories: List[str],
     hledgerCategories: HledgerCategories,
     income_expenses_df: DataFrame,
     net_worth_df: DataFrame,
-    scramble: bool,
     random_words: List[str],
     separator: str,
 ) -> List[Figure]:
+    net_worth_treemap: Figure = combined_treemap_plot(
+        args=args,
+        balances_df=net_worth_df,
+        account_categories=[
+            hledgerCategories.liability_categories,  # liabliities are shown but not scrambled.
+            hledgerCategories.asset_categories,  # Assets are not shown but are scrambled.
+        ],
+        title="Treemap - Your financial state/position:",
+        random_words=random_words,
+        separator=separator,
+    )
 
     net_worth_sankey: pd.DataFrame = to_sankey_df(
+        args=args,
         df=all_balances_df,
         top_level_account_categories=top_level_account_categories,
         desired_left_top_level_categories=[
             hledgerCategories.liability_categories
         ],
         desired_right_top_level_categories=[hledgerCategories.asset_categories],
-        scramble=scramble,
         random_words=random_words,
         separator=separator,
     )
@@ -129,13 +139,13 @@ def create_plot_objects(
 
     # Create the income vs expense Sankey plot.
     income_vs_expenses_sankey_df: pd.DataFrame = to_sankey_df(
+        args=args,
         df=income_expenses_df,
         top_level_account_categories=top_level_account_categories,
         desired_left_top_level_categories=[hledgerCategories.income_categories],
         desired_right_top_level_categories=[
             hledgerCategories.expense_categories
         ],
-        scramble=scramble,
         random_words=random_words,
         separator=separator,
     )
@@ -149,34 +159,34 @@ def create_plot_objects(
 
     # Generate the Treemap plot for the expenses.
     income_vs_expenses_treemap: Figure = combined_treemap_plot(
-        income_expenses_df,
-        [
+        args=args,
+        balances_df=income_expenses_df,
+        account_categories=[
             hledgerCategories.income_categories,
             hledgerCategories.expense_categories,
         ],
         title=(
             "Treemap - Change over time: how your income covered your expenses:"
         ),
+        random_words=random_words,
+        separator=separator,
     )
 
     expenses_treemap: Figure = combined_treemap_plot(
-        income_expenses_df,
-        [hledgerCategories.expense_categories],
+        args=args,
+        balances_df=income_expenses_df,
+        account_categories=[hledgerCategories.expense_categories],
         title="Treemap - Overview of your expenses:",
+        random_words=random_words,
+        separator=separator,
     )
     income_treemap: Figure = combined_treemap_plot(
-        income_expenses_df,
-        [hledgerCategories.income_categories],
+        args=args,
+        balances_df=income_expenses_df,
+        account_categories=[hledgerCategories.income_categories],
         title="Treemap - Overview of your income:",
-    )
-
-    net_worth_treemap: Figure = combined_treemap_plot(
-        net_worth_df,
-        [
-            hledgerCategories.liability_categories,
-            hledgerCategories.asset_categories,
-        ],
-        title="Treemap - Your financial state/position:",
+        random_words=random_words,
+        separator=separator,
     )
     return [
         net_worth_treemap,
@@ -197,7 +207,7 @@ def show_plots(
     if args.show_plots:
 
         specs: List[List[Dict[str, str]]] = []
-        for some_fig in some_figs:
+        for i, some_fig in enumerate(some_figs):
             specs.append([{"type": some_fig.layout.meta}])
         subplot_titles = [fig.layout.title.text for fig in some_figs]
         # Display all three graphs in a column.
@@ -215,8 +225,10 @@ def show_plots(
 
         fig.update_layout(
             title_text="Insight in financial situation",
+            # TODO: Scale the 2800 len per image with the max nr. of entries in
+            # levels dict for Sankey.
             height=len(some_figs) * 900,
-        )  # n plots x 900 px
+        )
 
         fig.show()
 

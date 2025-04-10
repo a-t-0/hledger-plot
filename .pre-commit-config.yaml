@@ -21,7 +21,7 @@ repos:
       ]
 # Test if the python code is formatted according to the Black standard.
  - repo: https://github.com/Quantco/pre-commit-mirrors-black
-   rev: 24.10.0
+   rev: 25.1.0
    hooks:
      - id: black-conda
        args:
@@ -34,7 +34,7 @@ repos:
 
 # Test if the python code is formatted according to the flake8 standard.
  - repo: https://github.com/Quantco/pre-commit-mirrors-flake8
-   rev: 7.1.1
+   rev: 7.2.0
    hooks:
     - id: flake8-conda
       exclude: src/hledger_plot/journal_parsing/import_journal_file.py
@@ -43,7 +43,7 @@ repos:
 
 # Test if the import statements are sorted correctly.
  - repo: https://github.com/PyCQA/isort
-   rev: 5.13.2
+   rev: 6.0.1
    hooks:
     - id: isort
       args: ["--profile", "black", --line-length=80]
@@ -54,7 +54,7 @@ repos:
 # - repo: https://github.com/python/mypy
  - repo: https://github.com/pre-commit/mirrors-mypy
 ### - repo: https://github.com/a-t-0/mypy
-   rev: v1.13.0
+   rev: v1.15.0
    hooks:
     - id: mypy
       exclude: src/hledger_plot/journal_parsing/import_journal_file.py
@@ -75,7 +75,7 @@ repos:
 
 # Tests if there are spelling errors in the code.
  - repo: https://github.com/codespell-project/codespell
-   rev: v2.3.0
+   rev: v2.4.1
    hooks:
     - id: codespell
       exclude: 'random_words.txt|random.txt'
@@ -163,7 +163,7 @@ repos:
       stages: [pre-commit]
 
  - repo: https://github.com/PyCQA/bandit
-   rev: 1.8.0
+   rev: 1.8.3
    hooks:
    - id: bandit
      name: Bandit
@@ -171,7 +171,7 @@ repos:
 
 # Enforces formatting style in Markdown (.md) files.
  - repo: https://github.com/executablebooks/mdformat
-   rev: 0.7.19
+   rev: 0.7.22
    hooks:
    - id: mdformat
      #args: ["-r ~MD013"]
@@ -187,10 +187,10 @@ repos:
  #    files: '^src/.+\.py$'
  #    args: ['--never', '--application-directories', 'src']
 
- - repo: https://github.com/myint/docformatter
-   rev: v1.7.5
-   hooks:
-   - id: docformatter
+#  - repo: https://github.com/myint/docformatter
+#    rev: v1.7.5
+#    hooks:
+#    - id: docformatter
 
  - repo: https://github.com/pre-commit/pygrep-hooks
    rev: v1.10.0

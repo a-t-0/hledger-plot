@@ -394,32 +394,44 @@ def separateAndAddCommentAndTags(commenttagstr, f_addcomment, f_addtag):
         f_addcomment(cmt)
 
 
-def import_include_path_v2(*, m, journal, jreader, parent_path: str):
+def import_include_path_v2(*, match, journal, journal_reader, parent_path: str):
     """Process an include path, combining it with the parent path if relative,
     and validating existence if absolute.
 
     Args:
-        m: Match object with the include path.
-        jreader: Reader object (e.g., file or StringIO).
-        parent_path (str): Parent directory path of the original file.
+        match: Match object containing the include path
+        journal: Existing journal content to append to
+        journal_reader: Reader object (e.g., file or StringIO)
+        parent_path: Parent directory path of the original file
     """
+    # Try to build include path relative to journal reader's directory
     try:
-        includepath = os.path.join(os.path.split(jreader.name)[0], m.group(1))
-    except:
-        includepath = m.group(1)
-    if parent_path != os.path.dirname(includepath):
-        abs_import_filepath: str = f"{parent_path}/{includepath}"
+        include_path = os.path.join(
+            os.path.split(journal_reader.name)[0], match.group(1)
+        )
+    except AttributeError:
+        include_path = match.group(1)
+
+    # Determine if we need to combine with parent_path
+    if parent_path != os.path.dirname(include_path):
+        absolute_import_path = os.path.join(parent_path, include_path)
     else:
-        abs_import_filepath = includepath
-    if os.path.isfile(abs_import_filepath):
-        new_parent_path: str = os.path.dirname(abs_import_filepath)
-        with open(abs_import_filepath) as includefh:
+        absolute_import_path = include_path
+
+    # Check if the file exists and process it
+    if os.path.isfile(absolute_import_path):
+        new_parent_path = os.path.dirname(absolute_import_path)
+
+        with open(absolute_import_path) as include_file:
             journal += parseJournal(
-                jreader=includefh, parent_path=new_parent_path
+                jreader=include_file, parent_path=new_parent_path
             )
         return journal
     else:
-        raise ValueError("ERROR: Could not find include file: %s" % includepath)
+        raise ValueError(
+            f"ERROR: Could not find include file: {include_path} at"
+            f" absolute_import_path={absolute_import_path}"
+        )
 
 
 def parseJournal(*, jreader, parent_path: str) -> List[Transaction]:
@@ -533,7 +545,10 @@ def process_include(
     m = re_include.match(line)
     if m is not None:
         import_include_path_v2(
-            m=m, journal=journal, jreader=jreader, parent_path=parent_path
+            match=m,
+            journal=journal,
+            journal_reader=jreader,
+            parent_path=parent_path,
         )
         return True
     return False
