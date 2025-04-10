@@ -72,22 +72,15 @@ def scramble_sankey_data(
 
     # Randomize the dataframe column by column.
     for text_column_header in text_column_headers:
-        if top_level_categories[0] == "liabilities":
-            print(f"text_column_header={text_column_header}")
         sankey_df[text_column_header] = scramble_df_column(
             scrambler_map=scrambler_map, some_col=sankey_df[text_column_header]
         )
     for numeric_column_header in numeric_column_headers:
-        if top_level_categories[0] == "liabilities":
-            print(f"numeric_column_header={numeric_column_header}")
         sankey_df[numeric_column_header] = randomize_list_order_magnitude(
             numbers=list(sankey_df[numeric_column_header]),
             lower=0.12,
             upper=10.2,
         )
-    if top_level_categories[0] == "liabilities":
-        print(sankey_df)
-        input(f"scrambler_map={scrambler_map}")
 
     return sankey_df, scrambler_map
 
@@ -96,15 +89,16 @@ def scramble_sankey_data(
 def scramble_df_column(
     *, scrambler_map: Dict[str, str], some_col: Series
 ) -> Series:
-    for i, entry in enumerate(some_col):
+    # Create a copy to avoid modifying the original Series directly
+    result = some_col.copy()
+    for i, entry in enumerate(result):
         atomic_categories: List[str] = entry.split(":")
         for j, atomic_category in enumerate(atomic_categories):
-
-            if atomic_category in scrambler_map.keys():
+            if atomic_category in scrambler_map:
                 atomic_categories[j] = scrambler_map[atomic_category]
-
-        some_col[i + 1] = ":".join(atomic_categories)
-    return some_col
+        # Update the current row, not the next one
+        result.iloc[i] = ":".join(atomic_categories)
+    return result
 
 
 @typechecked

@@ -10,6 +10,25 @@ from hledger_plot.create_plots.scrambler import scramble_sankey_data
 from hledger_plot.HledgerCategories import get_parent
 
 
+def check_negative_assets(df, identifier: str):
+    # Look at original values in column 1 before abs() was applied
+    negative_assets = df[
+        (df[0].str.startswith(identifier)) & (df[1].astype(int) < 0)
+    ]
+
+    if not negative_assets.empty:
+        problematic_assets = negative_assets[[0, 1]].values.tolist()
+        # Create formatted string with name-value pairs on new lines.
+        error_details = "\n".join(
+            f"{name}: {value}" for name, value in problematic_assets
+        )
+        raise ValueError(
+            f"Negative values found for assets:\n{error_details}\nAsset values"
+            " should not be negative. (Probably your opening balance is"
+            " incorrect or set for a different account."
+        )
+
+
 def combined_treemap_plot(
     *,
     args: Namespace,
@@ -23,6 +42,7 @@ def combined_treemap_plot(
     filtered_df = balances_df[
         balances_df[0].str.contains("|".join(account_categories))
     ].copy()  # Make a copy to avoid modifying the original DataFrame
+
     if len(set(filtered_df[0])) != len(filtered_df[0]):
         raise ValueError("Found dupes.")
 
@@ -31,8 +51,9 @@ def combined_treemap_plot(
     filtered_df.loc[:, "value"] = abs(filtered_df[1].astype(int))
     filtered_df.loc[:, "parent"] = filtered_df["name"].apply(get_parent)
 
+    check_negative_assets(df=filtered_df, identifier="assets")
+
     if args.randomize:
-        input(f"scrambling:{account_categories}")
         scramble_sankey_data(
             sankey_df=filtered_df,
             random_words=random_words,

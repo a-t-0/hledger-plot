@@ -111,18 +111,13 @@ def create_plot_objects(
         args=args,
         balances_df=net_worth_df,
         account_categories=[
-            # hledgerCategories.liability_categories,
-            hledgerCategories.asset_categories,
+            hledgerCategories.liability_categories,  # liabliities are shown but not scrambled.
+            hledgerCategories.asset_categories,  # Assets are not shown but are scrambled.
         ],
         title="Treemap - Your financial state/position:",
         random_words=random_words,
         separator=separator,
     )
-    input(net_worth_treemap.data[0])
-    # verify_parent_sums(data=net_worth_treemap.data[0], root_parent="assets")
-    # verify_parent_sums(data=net_worth_treemap.data[0], root_parent="liabilities")
-    # print("income_vs_expenses_treemap:\n\n")
-    # input(income_vs_expenses_treemap.data[0])
 
     net_worth_sankey: pd.DataFrame = to_sankey_df(
         args=args,
@@ -193,7 +188,6 @@ def create_plot_objects(
         random_words=random_words,
         separator=separator,
     )
-
     return [
         net_worth_treemap,
         income_vs_expenses_treemap,
@@ -202,26 +196,6 @@ def create_plot_objects(
         all_balances_sankey_man_pos,
         income_expenses_sankey_man_pos,
     ]
-
-
-def verify_parent_sums(data, root_parent):
-    sum_of_children: float = 0
-    root_parent_sum: float = 0
-    for i, label in enumerate(data["labels"]):
-        parent = data["parents"][i]
-        value: float = float(data["values"][i])
-        print(f"parent={parent} - {label} - {value}")
-        if label != root_parent:
-            sum_of_children = sum_of_children + float(value)
-        else:
-            root_parent_sum = float(value)
-        if parent not in label:
-            raise ValueError("Parent not found")
-    if sum_of_children > root_parent_sum:
-        raise ValueError(
-            f"sum_of_children={sum_of_children}m"
-            f" root_parent_sum={root_parent_sum}"
-        )
 
 
 @typechecked
@@ -234,7 +208,6 @@ def show_plots(
 
         specs: List[List[Dict[str, str]]] = []
         for i, some_fig in enumerate(some_figs):
-            print(f"i={i},some_fig.layout.meta={some_fig.layout.meta}")
             specs.append([{"type": some_fig.layout.meta}])
         subplot_titles = [fig.layout.title.text for fig in some_figs]
         # Display all three graphs in a column.
